@@ -1,5 +1,6 @@
 import re
 from enum import Enum, auto
+from typing import Optional
 import tree
 
 class TokenType(Enum):
@@ -204,7 +205,7 @@ class InformalParser:
             raise ValueError("Extra tokens at end")
         return ast
 
-    def _parse_expr(self, min_precedence: int, last_op_type: TokenType = None) -> tree.Node:
+    def _parse_expr(self, min_precedence: int, last_op_type: Optional[TokenType] = None) -> tree.Node:
         """優先順位を考慮して式をパースする
         
         Args:
