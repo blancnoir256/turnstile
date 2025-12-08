@@ -1,5 +1,5 @@
 from fastapi import FastAPI
-from typing import Optional, List
+from typing import Optional, List, Dict, Tuple
 import tree
 
 # app = FastAPI()
@@ -14,19 +14,20 @@ import tree
 
 
 class Formula:
-    input_string:str = ""                   # 入力
-    symbolic_representation_tree:tree.Node  # 公式な記号文として木構造にしたもの
-    tf_table = None                         # 真理値表
-    syntactic_derivation = None             # 統語論的方法による演繹の道筋
-
-    def __init__(self,val):
-        self.input_string = val
-        self.is_well_formed = False         # 入力は記号文か？
-        self.is_formal = False              # 入力は公式な記号文か？
+    def __init__(self, val: str):
+        self.input_string: str = val
+        self.symbolic_representation_tree: Optional[tree.Node] = None
+        self.tf_table: Optional[List[Dict[str, bool]]] = None
+        self.syntactic_derivation: Optional[List[str]] = None
+        self.is_well_formed: bool = False
+        self.is_formal: bool = False
 
 
-class ronri:
+class Inference:
     premises: List[Formula]
     conclusion: Formula
 
-test_tree = tree.Node()
+    def __init__(self, premises: List[Formula], conclusion: Formula):
+        self.premises = premises
+        self.conclusion = conclusion
+
