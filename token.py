@@ -37,7 +37,7 @@ TOKEN_DEFINITIONS = {
 }
 
 class LexerGenerator:
-    def __init__(self, text):
+    def __init__(self, text:str):
         self.symbol_map:dict[str, TokenType] = {}
         self._build_map()
         self.pattern = self._build_regex()
@@ -60,7 +60,7 @@ class LexerGenerator:
         atom_pattern = r'[P-Z](?:_[0-9]+)?'
         return re.compile(f'\\s*({ops_pattern}|{atom_pattern})\\s*')
 
-    def tokenize(self, text) -> list[Token]:
+    def tokenize(self, text:str) -> list[Token]:
         raw_tokens = [t for t in self.pattern.split(text) if t]
         results:list[Token] = []
         # token作成
@@ -81,7 +81,7 @@ class LexerGenerator:
         else:
             return None
 
-    def consume(self, expected_type:TokenType=None) -> Token:
+    def consume(self, expected_type:Optional[TokenType]=None) -> Token:
         token = self.peek()
         if token is None:
             raise ValueError("Unexpected EOF")
