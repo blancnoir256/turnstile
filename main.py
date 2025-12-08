@@ -104,8 +104,8 @@ class Inference:
     def __init__(self, premises: List[Formula], conclusion: Formula):
         self.premises = premises
         self.conclusion = conclusion
-        self.tf_table = None
-        self._is_semantically_valid = None
+        self.tf_table: Optional[List[Dict[str, bool]]] = None
+        self._is_semantically_valid: Optional[bool] = None
         
         # 全ての前提と結論が整形式であることを確認
         for premise in premises:
@@ -170,6 +170,9 @@ class Inference:
         if self.tf_table is None:
             self.generate_truth_table()
         
+        # この時点で tf_table は None ではない
+        assert self.tf_table is not None
+        
         # 全ての行をチェック
         for row in self.tf_table:
             # 全ての前提が真かチェック
@@ -195,6 +198,9 @@ class Inference:
         if self.tf_table is None:
             self.generate_truth_table()
         
+        # この時点で tf_table は None ではない
+        assert self.tf_table is not None
+        
         for row in self.tf_table:
             all_premises_true = all(
                 row[f"premise_{idx}"] for idx in range(len(self.premises))
@@ -208,6 +214,9 @@ class Inference:
         """真偽値表を見やすく表示する"""
         if self.tf_table is None:
             self.generate_truth_table()
+        
+        # この時点で tf_table は None ではない
+        assert self.tf_table is not None
         
         atoms = sorted(self.get_all_atoms())
         
