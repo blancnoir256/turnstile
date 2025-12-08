@@ -1,11 +1,7 @@
 # from fastapi import FastAPI
-from typing import Optional, List, Dict, TYPE_CHECKING
+from typing import Optional, List, Dict
 import tree
-
-if TYPE_CHECKING:
-    # For type checkers: import from our local token module
-    # At runtime, these imports happen inside __init__ to avoid conflicts
-    from token import LexerGenerator, FormalParser, InformalParser  # type: ignore[attr-defined]
+from tokenizer import LexerGenerator, FormalParser, InformalParser
 
 # app = FastAPI()
 
@@ -28,10 +24,6 @@ class Formula:
 # このクラスのインスタンスの記号文が公式な記号文か非公式な記号文か記号文でないただの記号列かを保持する。
 # 可能であれば非公式な記号文はどこが省略されているかを述べて変換する。
     def __init__(self, val: str):
-        # Import classes from the local token module
-        # We import inside the function to avoid issues with the module name conflicting with Python's built-in token module
-        from token import LexerGenerator, FormalParser, InformalParser
-        
         self.input_string: str = val
         self.symbolic_representation_tree: Optional[tree.Node] = None
         self.is_well_formed: bool = False
