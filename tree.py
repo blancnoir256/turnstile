@@ -1,10 +1,10 @@
-import re
-
 class Node:
     def __init__(self):
-        raise NotImplementedError
+        pass
+    
     def __repr__(self) -> str:
         raise NotImplementedError
+    
     def evaluate(self, env):
         raise NotImplementedError
 
@@ -85,4 +85,3 @@ class Equivalence(Operator):
 
     def evaluate(self, env):
         return self.left.evaluate(env) == self.right.evaluate(env)
-
