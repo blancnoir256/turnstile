@@ -199,13 +199,19 @@ class InformalParser:
 
     def parse(self) -> tree.Node:
         """非公式な記号文をパースする"""
-        ast = self._parse_expr(0)
+        ast = self._parse_expr(0, None)
         if self.lexer.peek() is not None:
             raise ValueError("Extra tokens at end")
         return ast
 
-    def _parse_expr(self, min_precedence: int) -> tree.Node:
-        """優先順位を考慮して式をパースする (Pratt parser)"""
+    def _parse_expr(self, min_precedence: int, last_op_type: TokenType = None) -> tree.Node:
+        """優先順位を考慮して式をパースする
+        
+        Args:
+            min_precedence: この呼び出しで処理する最小の優先度
+            last_op_type: 同じ優先度レベルで直前に使用された演算子の種類
+                         (ANDとORの混在を防ぐため)
+        """
         from tree import Atom, Not, And, Or, Implies, Equivalence
         
         # 左辺をパース
@@ -229,11 +235,28 @@ class InformalParser:
             if precedence < min_precedence:
                 break
             
+            # 同じ優先度レベルで異なる演算子が混在していないかチェック
+            # ANDとORは同じ優先度(2)だが、混在してはいけない
+            if precedence == 2 and last_op_type is not None:
+                # 同じ優先度レベルで、前回と異なる演算子が来た場合
+                if last_op_type != token.type:
+                    # ANDとORの混在を検出
+                    if {last_op_type, token.type} == {TokenType.AND, TokenType.OR}:
+                        raise ValueError(
+                            f"結合子∧と∨が同じ優先順位で同時に出現しています。括弧を使用してください。"
+                        )
+            
             # 演算子を消費
             op = self.lexer.consume()
             
             # 左結合なので同じ優先度の演算子は precedence + 1 で再帰
-            right = self._parse_expr(precedence + 1)
+            # ただし、同じ演算子タイプを渡して混在チェックができるようにする
+            if precedence == min_precedence:
+                # 同じ優先度レベルで続けている場合、演算子タイプを伝播
+                right = self._parse_expr(precedence + 1, op.type)
+            else:
+                # より高い優先度レベルに入る場合、演算子タイプをリセット
+                right = self._parse_expr(precedence + 1, None)
             
             # ASTノードを構築
             if op.type == TokenType.AND:
@@ -244,6 +267,9 @@ class InformalParser:
                 left = Implies(left, right)
             elif op.type == TokenType.EQUIV:
                 left = Equivalence(left, right)
+            
+            # 次のループのために演算子タイプを更新
+            last_op_type = op.type
         
         return left
 
@@ -268,14 +294,16 @@ class InformalParser:
         # 括弧 ( )
         if token.type == TokenType.LPAREN:
             self.lexer.consume(TokenType.LPAREN)
-            expr = self._parse_expr(0)
+            # 括弧内は新しいスコープなので last_op_type をリセット
+            expr = self._parse_expr(0, None)
             self.lexer.consume(TokenType.RPAREN)
             return expr
         
         # 角括弧 [ ]
         if token.type == TokenType.LBRACKET:
             self.lexer.consume(TokenType.LBRACKET)
-            expr = self._parse_expr(0)
+            # 括弧内は新しいスコープなので last_op_type をリセット
+            expr = self._parse_expr(0, None)
             self.lexer.consume(TokenType.RBRACKET)
             return expr
         
