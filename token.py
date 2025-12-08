@@ -189,7 +189,94 @@ class InformalParser:
     """非公式な記号文もパースする(優先度と左寄せ対応)"""
     def __init__(self, lexer: LexerGenerator):
         self.lexer = lexer
+        # 演算子の優先順位を定義 (値が大きいほど優先度が高い)
+        self.precedence = {
+            TokenType.EQUIV: 1,    # ↔ 最低優先度
+            TokenType.IMPLIES: 1,  # → 最低優先度
+            TokenType.OR: 2,       # ∨ 高優先度
+            TokenType.AND: 2,      # ∧ 高優先度
+        }
 
     def parse(self) -> tree.Node:
-        # TODO 非公式な記号文についてもパースできるようにする
-        raise NotImplementedError("非公式記号文のパースはまだ実装されていません")
+        """非公式な記号文をパースする"""
+        ast = self._parse_expr(0)
+        if self.lexer.peek() is not None:
+            raise ValueError("Extra tokens at end")
+        return ast
+
+    def _parse_expr(self, min_precedence: int) -> tree.Node:
+        """優先順位を考慮して式をパースする (Pratt parser)"""
+        from tree import Atom, Not, And, Or, Implies, Equivalence
+        
+        # 左辺をパース
+        left = self._parse_primary()
+        
+        # 二項演算子を処理
+        while True:
+            token = self.lexer.peek()
+            if token is None:
+                break
+            
+            # 閉じ括弧ならここで終了
+            if token.type in (TokenType.RPAREN, TokenType.RBRACKET):
+                break
+            
+            # 演算子でない、または優先度が低すぎる場合は終了
+            if token.type not in self.precedence:
+                break
+            
+            precedence = self.precedence[token.type]
+            if precedence < min_precedence:
+                break
+            
+            # 演算子を消費
+            op = self.lexer.consume()
+            
+            # 左結合なので同じ優先度の演算子は precedence + 1 で再帰
+            right = self._parse_expr(precedence + 1)
+            
+            # ASTノードを構築
+            if op.type == TokenType.AND:
+                left = And(left, right)
+            elif op.type == TokenType.OR:
+                left = Or(left, right)
+            elif op.type == TokenType.IMPLIES:
+                left = Implies(left, right)
+            elif op.type == TokenType.EQUIV:
+                left = Equivalence(left, right)
+        
+        return left
+
+    def _parse_primary(self) -> tree.Node:
+        """一次式(原子文、否定、括弧で囲まれた式)をパースする"""
+        from tree import Atom, Not
+        
+        token = self.lexer.peek()
+        if token is None:
+            raise ValueError("Unexpected end of input")
+        
+        # 原子文
+        if token.type == TokenType.ATOM:
+            self.lexer.consume()
+            return Atom(token.value)
+        
+        # 否定
+        if token.type == TokenType.NOT:
+            self.lexer.consume()
+            return Not(self._parse_primary())
+        
+        # 括弧 ( )
+        if token.type == TokenType.LPAREN:
+            self.lexer.consume(TokenType.LPAREN)
+            expr = self._parse_expr(0)
+            self.lexer.consume(TokenType.RPAREN)
+            return expr
+        
+        # 角括弧 [ ]
+        if token.type == TokenType.LBRACKET:
+            self.lexer.consume(TokenType.LBRACKET)
+            expr = self._parse_expr(0)
+            self.lexer.consume(TokenType.RBRACKET)
+            return expr
+        
+        raise ValueError(f"Unexpected token: {token.value}")
