@@ -23,7 +23,8 @@ class Formula:
 # このクラスのインスタンスの記号文が公式な記号文か非公式な記号文か記号文でないただの記号列かを保持する。
 # 可能であれば非公式な記号文はどこが省略されているかを述べて変換する。
     def __init__(self, val: str):
-        from token import LexerGenerator, FormalParser, InformalParser
+        # Import from the local token module (not Python's built-in token module)
+        import token as token_module
         
         self.input_string: str = val
         self.symbolic_representation_tree: Optional[tree.Node] = None
@@ -38,20 +39,20 @@ class Formula:
         
         try:
             # まずトークン化を試みる
-            lexer = LexerGenerator(val)
+            lexer = token_module.LexerGenerator(val)
             
             # 公式な記号文としてパースを試みる
             try:
-                lexer_formal = LexerGenerator(val)
-                parser = FormalParser(lexer_formal)
+                lexer_formal = token_module.LexerGenerator(val)
+                parser = token_module.FormalParser(lexer_formal)
                 self.symbolic_representation_tree = parser.parse()
                 self.is_well_formed = True
                 self.is_formal = True
             except ValueError as e:
                 # 公式な記号文としてパースできなかった場合、非公式な記号文としてパースを試みる
                 try:
-                    lexer_informal = LexerGenerator(val)
-                    parser = InformalParser(lexer_informal)
+                    lexer_informal = token_module.LexerGenerator(val)
+                    parser = token_module.InformalParser(lexer_informal)
                     self.symbolic_representation_tree = parser.parse()
                     self.is_well_formed = True
                     self.is_formal = False
@@ -121,7 +122,7 @@ class Inference:
         atoms.update(self.conclusion.get_atoms())
         return atoms
     
-    def generate_truth_table(self) -> List[Dict]:
+    def generate_truth_table(self) -> List[Dict[str, bool]]:
         """真偽値表を生成する
         
         Returns:
@@ -135,9 +136,11 @@ class Inference:
         truth_table = []
         for i in range(2 ** n):
             # i のビットパターンから真偽値割り当てを生成
+            # 例: n=3 の場合、i=5 (0b101) は [True, False, True] に対応
             env = {}
             for j, atom in enumerate(atoms):
                 # 右から j 番目のビットが 1 なら True, 0 なら False
+                # 左から右へ読むため (n - 1 - j) でビット位置を調整
                 env[atom] = bool((i >> (n - 1 - j)) & 1)
             
             # この環境での各前提と結論の真偽値を計算
