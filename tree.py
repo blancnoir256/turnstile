@@ -1,11 +1,10 @@
-import re
-from enum import Enum, auto
-
 class Node:
     def __init__(self):
-        raise NotImplementedError
+        pass
+    
     def __repr__(self) -> str:
         raise NotImplementedError
+    
     def evaluate(self, env):
         raise NotImplementedError
 
@@ -86,26 +85,3 @@ class Equivalence(Operator):
 
     def evaluate(self, env):
         return self.left.evaluate(env) == self.right.evaluate(env)
-
-
-class TokenType(Enum):
-    ATOM = auto()       # P, Q...
-    NOT = auto()        # ~
-    AND = auto()        # &
-    OR = auto()         # |
-    IMPLIES = auto()    # ->
-    EQUIV = auto()      # <->
-    LPAREN = auto()     # (
-    RPAREN = auto()     # )
-    EOF = auto()        # End of File
-
-class Token:
-    def __init__(self, type: TokenType, value: str, line: int, col: int):
-        self.type = type
-        self.value = value
-        self.line = line
-        self.col = col
-
-    def __repr__(self):
-        return f"Token({self.type.name}, '{self.value}', at {self.line}:{self.col})"
-
