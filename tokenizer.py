@@ -25,11 +25,11 @@ class Token:
 
 
 TOKEN_DEFINITIONS = {
-    TokenType.NOT:     ["!", "~", "～"],
-    TokenType.AND:     ["&", "∧", "/\\"],
-    TokenType.OR:      ["|", "∨", "\\/"],
-    TokenType.IMPLIES: ["->", "→", "=>"],
-    TokenType.EQUIV:   ["<->", "↔", "<=>"],
+    TokenType.NOT:     ["!", "~", "～", chr(0x7E)],
+    TokenType.AND:     ["&", "∧", "/\\", chr(0x26)],
+    TokenType.OR:      ["|", "∨", "\\/", chr(0x7C)],
+    TokenType.IMPLIES: ["->", "→", "=>", chr(0x2D)+chr(0x3E)],
+    TokenType.EQUIV:   ["<->", "↔", "<=>", chr(0x3C)+chr(0x2D)+chr(0x3E)],
     TokenType.LPAREN:  ["("],
     TokenType.RPAREN:  [")"],
     TokenType.LBRACKET: ["["],
