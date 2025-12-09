@@ -49,7 +49,8 @@ class LexerGenerator:
             for s in symbols:
                 # 重複チェック
                 if s in self.symbol_map:
-                    raise ValueError(f"定義エラー: 記号 '{s}' が重複しています")
+                    if self.symbol_map[s] != token_type:
+                        raise ValueError(f"定義エラー: 記号 '{s}' が重複しています")
                 self.symbol_map[s] = token_type
 
     def _build_regex(self):
